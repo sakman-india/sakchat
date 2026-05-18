@@ -50,7 +50,7 @@ if (fs.existsSync(dbFile)) {
     } catch(e) {}
 }
 
-function saveData() { fs.writeFileSync(dbFile, JSON.stringify({ chatHistory, profiles, loginBg })); }
+// Old saveData disabled for MongoDB)); }
 
 function deletePhysicalFile(msg) {
     const fileUrls = [msg.image, msg.audio, msg.fileData];
@@ -128,5 +128,60 @@ io.on('connection', (socket) => {
     socket.on('endCall', (data) => { if(users[data.to]) io.to(users[data.to]).emit('callEnded', data); });
 });
 
-server.listen(process.env.PORT || 3000, '0.0.0.0', () => { console.log('Server is LIVE (Instant Login + Sync Mode)'); });
+// Old listen disabled for MongoDB
 
+
+// === MONGODB DATABASE INTEGRATION ===
+const mongoose = require('mongoose');
+const mongoURI = process.env.MONGODB_URI || "mongodb+srv://sakchat:9jDvpac22Awr7uu4@cluster0.hz8ystf.mongodb.net/?appName=Cluster0";
+
+const chatStoreSchema = new mongoose.Schema({
+    key: { type: String, default: 'main_data' },
+    chatHistory: Array,
+    profiles: Object,
+    loginBg: Object
+});
+const ChatStore = mongoose.model('ChatStore', chatStoreSchema);
+
+async function saveData() {
+    try {
+        // Keep file sync as a safe local backup
+        fs.writeFileSync(dbFile, JSON.stringify({ chatHistory, profiles, loginBg }));
+        
+        // Cloud Sync to MongoDB Atlas
+        await ChatStore.findOneAndUpdate(
+            { key: 'main_data' },
+            { chatHistory, profiles, loginBg },
+            { upsert: true }
+        );
+    } catch (err) {
+        console.error("MongoDB Cloud Save Error:", err);
+    }
+}
+
+mongoose.connect(mongoURI)
+    .then(async () => {
+        console.log('Connected to MongoDB Atlas Cloud successfully!');
+        
+        // Server launch hobar aage cloud theke data tule ana
+        const cloudData = await ChatStore.findOne({ key: 'main_data' });
+        if (cloudData) {
+            if (cloudData.chatHistory) chatHistory = cloudData.chatHistory;
+            if (cloudData.profiles) profiles = cloudData.profiles;
+            if (cloudData.loginBg) loginBg = cloudData.loginBg;
+            console.log('Chat history and profiles loaded from MongoDB Cloud!');
+        } else {
+            console.log('No existing cloud database found. Initializing a fresh backup.');
+        }
+
+        server.listen(process.env.PORT || 3000, '0.0.0.0', () => {
+            console.log('Server is LIVE (Instant Login + Sync Mode with MongoDB Cloud)');
+        });
+    })
+    .catch(err => {
+        console.error('MongoDB Initial Connection Failed:', err);
+        // Fallback safety to ensure server turns on regardless
+        server.listen(process.env.PORT || 3000, '0.0.0.0', () => {
+            console.log('Server is LIVE (Local Fallback Mode)');
+        });
+    });
