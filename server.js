@@ -128,5 +128,5 @@ io.on('connection', (socket) => {
     socket.on('endCall', (data) => { if(users[data.to]) io.to(users[data.to]).emit('callEnded', data); });
 });
 
-server.listen(process.env.PORT || 3000, '127.0.0.1', () => { console.log('Server is LIVE (Instant Login + Sync Mode)'); });
+server.listen(process.env.PORT || 3000, '0.0.0.0', () => { console.log('Server is LIVE (Instant Login + Sync Mode)'); });
 
