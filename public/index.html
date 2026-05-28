@@ -729,5 +729,63 @@
                     div.style.background = 'transparent'; div.style.boxShadow = 'none'; div.style.padding = '0';
                     content += `<span class="role-tag" style="background: white; padding: 2px 5px; border-radius: 5px; display:inline-block;">${senderName}</span>`;
                     content += `<div style="font-size: 80px; line-height: 1; margin: 5px 0; filter: drop-shadow(2px 4px 6px rgba(0,0,0,0.2));">${m.text}</div>`;
-                    content += `<div class="time-tag" style="background:
+                    content += `<div class="time-tag" style="background: rgba(255,255,255,0.7); padding: 2px 5px; border-radius: 10px;">${m.time ? m.time : ''} ${tickHTML}</div>`;
+                } else {
+                    let imgHTML = ''; if (m.image && !m.isDeleted) imgHTML = `<img src="${m.image}" class="msg-image" onclick="viewFullImage('${m.image}')" draggable="false">`;
+                    let docHTML = ''; if (m.fileData && !m.isDeleted) docHTML = `<a href="${m.fileData}" download="${m.fileName}" class="doc-msg" onclick="event.stopPropagation()"><span class="doc-icon">📄</span><span class="doc-name">${m.fileName}</span><span class="doc-download">⬇️</span></a>`;
+                    let audioHTML = '';
+                    if (m.audio && !m.isDeleted) {
+                        audioHTML = `<div class="audio-name" style="color:#075e54; font-size:12px; font-weight:bold; margin-bottom:5px;">🎵 ${m.fileName || 'Audio'}</div>
+                                                                        <audio controls controlsList="nodownload noplaybackrate" src="${m.audio}" class="msg-audio" onclick="event.stopPropagation()"></audio>`;
+                    }
+                    let locHTML = ''; if (m.location && !m.isDeleted) locHTML = `<a href="https://www.google.com/maps?q=${m.location.lat},${m.location.lng}" target="_blank" class="loc-msg" onclick="event.stopPropagation()"><span class="loc-icon">📍</span><span class="loc-text">View Location Map</span></a>`;
+                    content += `<span class="role-tag">${senderName}</span>${imgHTML}${docHTML}${audioHTML}${locHTML}<span style="white-space: pre-wrap;">${m.isDeleted ? m.text : formatLinks(m.text)}</span><div class="time-tag">${m.time ? m.time : ''} ${tickHTML}</div>`;
+                }
+                div.innerHTML = content; box.appendChild(div);
+            });
+            
+            if (scrollToBottom) {
+                box.scrollTop = box.scrollHeight;
+            } else {
+                // Jekhane chilen, thik seikhanei page ta theme thakbe
+                box.scrollTop = oldScrollTop + (box.scrollHeight - oldScrollHeight);
+            }
+        }
+
+        function scrollToMsg(id) { const el = document.getElementById('msg-' + id); if (el) { el.scrollIntoView({ behavior: 'smooth', block: 'center' }); el.classList.add('highlight-msg'); setTimeout(() => el.classList.remove('highlight-msg'), 2000); } }
+        function openModal(m) { selectedMsg = m; document.getElementById('msgModal').style.display = 'flex'; if (m.isDeleted) { document.getElementById('btnReply').style.display = 'none'; document.getElementById('btnCopy').style.display = 'none'; document.getElementById('btnEveryone').style.display = 'none'; } else { document.getElementById('btnReply').style.display = 'block'; document.getElementById('btnEveryone').style.display = (m.role === currentUser ? 'block' : 'none'); if(m.text && m.text.trim() !== '' && !m.isSticker) { document.getElementById('btnCopy').style.display = 'block'; } else { document.getElementById('btnCopy').style.display = 'none'; } } }
+        function closeModal() { document.getElementById('msgModal').style.display = 'none'; }
+        function copyMessage() { if (selectedMsg && selectedMsg.text) { if(navigator.clipboard && window.isSecureContext) { navigator.clipboard.writeText(selectedMsg.text).then(() => { showToast("Message copied! 📋"); closeModal(); }); } else { const textArea = document.createElement("textarea"); textArea.value = selectedMsg.text; textArea.style.position = "fixed"; document.body.appendChild(textArea); textArea.focus(); textArea.select(); try { document.execCommand('copy'); showToast("Message copied! 📋"); } catch (err) {} textArea.remove(); closeModal(); } } }
+        function prepareReply() { replyTo = selectedMsg; document.getElementById('replyPreview').style.display = 'block'; document.getElementById('replyUser').innerText = 'Replying to ' + ((globalProfiles && globalProfiles[replyTo.role] && globalProfiles[replyTo.role].name) ? globalProfiles[replyTo.role].name : replyTo.role); document.getElementById('replyText').innerText = getReplyTextPreview(replyTo); closeModal(); document.getElementById('msgInput').focus(); }
+        function cancelReply() { replyTo = null; document.getElementById('replyPreview').style.display = 'none'; }
+
+        function sendMessage() {
+            closeAllMenus();
+            if(isRecording) { stopAndSendRecording(); return; }
+            const msgInput = document.getElementById('msgInput'); const text = msgInput.value; if (!text.trim()) return;
+            socket.emit('sendMessage', { id: Date.now().toString(), role: currentUser, text: text, time: new Date().toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'}), date: new Date().toLocaleDateString('en-GB', {day:'numeric', month:'short', year:'numeric'}), status: 'sent', replyTo: replyTo ? replyTo.id : null, replyToRole: replyTo ? replyTo.role : null, replyToText: replyTo ? getReplyTextPreview(replyTo) : null });
+            msgInput.value = ''; msgInput.style.height = '44px'; cancelReply();
+        }
+
+        function deleteMsg(type) {
+            socket.emit('deleteMessage', {id: selectedMsg.id, type, role: currentUser});
+            closeModal();
+            const msgEl = document.getElementById('msg-' + selectedMsg.id);
+            if (msgEl) {
+                if (type === 'me') { msgEl.style.display = 'none'; }
+                else if (type === 'everyone') {
+                    msgEl.innerHTML = `<span class="role-tag">${currentUser}</span><span style="white-space: pre-wrap; font-style: italic; color: #888;">🚫 This message was deleted</span><div class="time-tag"></div>`;
+                    msgEl.classList.add('deleted-msg'); msgEl.style.background = 'transparent'; msgEl.style.boxShadow = 'none';
+                }
+            }
+        }
+
+        function clearChat() { closeAllMenus(); if(confirm("Clear chat for you?")) { socket.emit('clearChat', currentUser); document.getElementById('messages').innerHTML = ''; showToast("Chat Cleared! 🧹"); } }
+
+        let typingTimer; const msgInputField = document.getElementById('msgInput'); msgInputField.addEventListener('input', function() { this.style.height = '44px'; this.style.height = (this.scrollHeight) + 'px'; socket.emit('typing', currentUser); clearTimeout(typingTimer); typingTimer = setTimeout(() => socket.emit('stopTyping', currentUser), 1500); });
+        socket.on('userTyping', (r) => { if(r !== currentUser) document.getElementById('statusText').innerText = 'typing...'; });
+        socket.on('userStoppedTyping', (r) => { if(r !== currentUser) updateStatus(); });
+    </script>
+</body>
+</html>
 
