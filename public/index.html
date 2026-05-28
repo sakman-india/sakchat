@@ -40,14 +40,14 @@
         #chatBox { display: none; width: 100%; height: 100%; flex-direction: column; position: relative; z-index: 2; background: #ece5dd; }
         .dancing-couple { font-size: 55px; margin-bottom: 25px; animation: bounce 1.5s infinite alternate ease-in-out; filter: drop-shadow(0px 5px 5px rgba(0,0,0,0.3)); }
         @keyframes bounce { 0% { transform: translateY(0) scale(1); } 100% { transform: translateY(-15px) scale(1.05); } }
-        
+
         .login-input { padding: 15px; width: 85%; border: 1px solid rgba(255,255,255,0.6); border-radius: 30px; outline: none; text-align: center; font-size: 16px; margin-bottom: 10px; background: rgba(255, 255, 255, 0.5); color: #222; font-weight: bold; box-shadow: inset 0 2px 5px rgba(0,0,0,0.1); box-sizing: border-box; transition: background 0.3s; }
         .login-input::placeholder { color: #ff3366; letter-spacing: 3px; font-size: 20px; font-weight: bold; transform: translateY(3px); }
         .login-btn { margin-top:15px; padding:10px 40px; background: #ff3366; border:none; border-radius:30px; cursor: pointer; box-shadow: 0 4px 15px rgba(255, 51, 102, 0.5); transition: transform 0.2s; }
         .login-btn:active { transform: scale(0.95); }
         .animated-heart { display: inline-block; font-size: 30px; animation: pulseHeart 1s infinite; line-height: 1; margin-top: 5px;}
         @keyframes pulseHeart { 0% { transform: scale(1); } 50% { transform: scale(1.3); } 100% { transform: scale(1); } }
-        
+
         .header { background: #075e54; color: white; padding: 10px 15px; flex-shrink: 0; }
         .header-top { display: flex; align-items: center; justify-content: space-between; }
         .user-info { display: flex; align-items: center; flex: 1; }
@@ -125,7 +125,7 @@
         #muteBtn { background: rgba(255,255,255,0.2); }
         #cutBtn { background: #ff3b30; transform: rotate(135deg); }
         #cutBtn:active { transform: rotate(135deg) scale(0.9); }
-        
+
         /* 👑 NEW: Custom Toast Notification Style */
         #customToast {
             visibility: hidden; min-width: 200px; background-color: rgba(0,0,0,0.8); color: #fff;
@@ -146,10 +146,10 @@
     <div id="loginBgContainer"></div>
     <div id="loginBox">
         <div class="dancing-couple">🕺❤️💃</div>
-        
         <input type="password" id="password" class="login-input" placeholder="************" oninput="autoLogin()">
         <br><button onclick="login()" class="login-btn"><span class="animated-heart">🥰</span></button>
     </div>
+    
     <div id="callScreen">
         <div style="text-align: center; margin-top: 20px;">
             <img id="callDP" src="">
@@ -163,6 +163,7 @@
         </div>
         <audio id="remoteAudio" autoplay></audio>
     </div>
+
     <div id="msgModal" class="modal-bg">
         <div class="modal-content">
             <h3 style="color:#075e54; margin-top:0;">Options</h3>
@@ -174,6 +175,7 @@
         </div>
     </div>
     <div id="dpViewModal" class="modal-bg" onclick="closeDPView()"><span class="close-dp-btn" onclick="closeDPView()">×</span><img id="fullSizeDP" src=""></div>
+    
     <div id="chatBox">
         <div class="header">
             <div class="header-top">
@@ -184,17 +186,14 @@
                         <div id="statusText" class="status-text">Offline</div>
                     </div>
                 </div>
-                
+
                 <div class="header-actions" style="display: flex; align-items: center;">
                     <input type="file" id="dpInput" style="display:none" accept="image/*" onchange="uploadDP(this)">
                     <input type="file" id="bgInput" style="display:none" accept="image/*" onchange="uploadWallpaper(this)">
                     <input type="file" id="loginBgInput" style="display:none" accept="image/*,video/*" onchange="uploadGlobalLoginBg(this)">
-                    
                     <div class="chat-magic-heart" onclick="window.top.location.href='https://sakmusic.xyz';">❤️</div>
-
                     <button class="icon-btn" onclick="startCall()">📞</button>
                     <button class="icon-btn" onclick="toggleMenu(event)">⋮</button>
-                    
                     <div id="kebabMenu" class="dropdown-content">
                         <a href="#" id="masterLoginBgOption" style="display:none; color:#075e54; font-weight:bold;" onclick="closeAllMenus(); document.getElementById('loginBgInput').click();">Change Login Page Media</a>
                         <a href="#" onclick="closeAllMenus(); changeName();">Change My Name</a>
@@ -230,7 +229,7 @@
             <button id="sendBtn" onclick="sendMessage()">➤</button>
         </div>
     </div>
-    
+
     <script src="/socket.io/socket.io.js"></script>
     <script>
         const socket = io({ transports: ['websocket'], upgrade: false });
@@ -240,8 +239,10 @@
         let recordTimerInterval = null, recordSeconds = 0;
         let peerConn = null, callStream = null, callInterval = null, callSeconds = 0;
         const rtcConfig = { iceServers: [{ urls: 'stun:stun.l.google.com:19302' }] };
-        
-        // 👑 NEW: Custom Toast Function
+
+        // 🧠 LAZY LOADING VARIABLES
+        let visibleCount = 50; 
+
         function showToast(msg) {
             const toastEl = document.getElementById("customToast");
             toastEl.innerText = msg;
@@ -250,19 +251,28 @@
         }
 
         document.addEventListener("DOMContentLoaded", () => {
-            const safeEmojis = "😀,😃,😄,😁,😆,😅,😂,🤣,🥲,☺️,😊,😇,🙂,🙃,😉,😌,😍,🥰,😘,😗,😙,😚,😋,😛,😝,😜,🤪,🤨,🧐,🤓,😎,🥸,🤩,🥳,😏,😒,😞,😔,😟,😕,🙁,☹️,😣,😖,😫,😩,🥺,😢,😭,😤,😠,😡,🤬,🤯,😳,🥵,🥶,😱,😨,😰,😥,😓,🤗,🤔,🫣,🤭,🤫,🤥,😶,😐,😑,😬,🙄,😯,😦,😧,😮,😲,🥱,😴,🤤,😪,😵,🤐,🥴,🤢,🤮,🤧,😷,🤒,🤕,🤑,🤠,😈,👿,👹,👺,🤡,💩,👻,💀,☠️,👽,👾,🤖,🎃,😺,😸,😹,😻,😼,😽,🙀,😿,😾,🙈,🙉,🙊,💋,💌,💘,💝,💖,💗,💓,💞,💕,💟,❣️,💔,❤️,🧡,💛,💚,💙,💜,🤎,🖤,🤍,💯,💢,💥,💫,💦,💨,💣,💬,💭,💤,👋,🤚,🖐️,✋,🖖,👌,🤌,🤏,✌️,🤞,🫰,🤟,🤘,🤙,👈,👉,👆,🖕,👇,☝️,👍,👎,✊,👊,🤛,🤜,👏,🙌,🫶,👐,🤲,🤝,🙏,✍️,💅,🤳,💪,🦵,🦶,👂,👃,🧠,🫀,🫁,🦷,🦴,👀,👁️,👅,👄,🫦,👶,🧒,👦,👧,🧑,👱,👨,🧔,👩,🧓,👴,👵,🐶,🐱,🐭,🐹,🐰,🦊,🐻,🐼,🐻‍❄️,🐨,🐯,🦁,🐮,🐷,🐽,🐸,🐵,🐒,🐔,🐧,🐦,🐤,🐣,🐥,🦆,🦅,🦉,🦇,🐺,🐗,🐴,🦄,🐝,🪱,🐛,🦋,🐌,🐞,🐜,🪰,🪲,🪳,🦟,🦗,🕷️,🕸️,🦂,🐢,🐍,🦎,🦖,🦕,🐙,🦑,🦐,🦞,🦀,🐡,🐠,🐟,🐬,🐳,🐋,🦈,🦭,🐊,🐅,🐆,🦓,🦍,🦧,🦣,🐘,🦛,🦏,🐪,🐫,🦒,🦘,🐃,🐂,🐄,🐎,🐖,🐏,🐑,🦙,🐐,🦌,🐕,🐩,🦮,🐕‍🦺,🐈,🐈‍⬛,🪶,🐓,🦃,🦤,🦚,🦜,🦢,🦩,🕊️,🐇,🦝,🦨,🦡,🦫,🦦,🦥,🐁,🐀,🐿️,🦔,🐾,🐉,🐲,🌵,🎄,🌲,🌳,🌴,🪵,🌱,🌿,☘️,🍀,🎍,🪴,🎋,🍃,🍂,🍁,🍄,🐚,🪨,🌾,💐,🌷,🌹,🥀,🌺,🌸,🌼,🌻,🌞,🌝,🌛,🌜,🌚,🌕,🌖,🌗,🌘,🌑,🌒,🌓,🌔,🌙,🌎,🌍,🌏,🪐,💫,⭐️,🌟,✨,⚡️,☄️,💥,🔥,🌪️,🌈,☀️,🌤️,⛅️,🌥️,☁️,🌦️,🌧️,⛈️,🌩️,🌨️,❄️,☃️,⛄️,🌬️,💨,💧,💦,☔️,☂️,🌊,🌫️,🍏,🍎,🍐,🍊,🍋,🍌,🍉,🍇,🍓,🫐,🍈,🍒,🍑,🥭,🍍,🥥,🥝,🍅,🍆,🥑,🥦,🥬,🥒,🌶️,🫑,🌽,🥕,🫒,🧄,🧅,🥔,🍠,🥐,🥯,🍞,🥖,🥨,🧀,🥚,🍳,🧈,🥞,🧇,🥓,🥩,🍗,🍖,🌭,🍔,🍟,🍕,🫓,🥪,🥙,🧆,🌮,🌯,🫔,🥗,🥘,🫕,🥫,🍝,🍜,🍲,🍛,🍣,🍱,🥟,🦪,🍤,🍙,🍚,🍘,🍥,🥠,🥮,🍢,🍡,🍧,🍨,🍦,🥧,🧁,🍰,🎂,🍮,🍭,🍬,🍫,🍿,🍩,🍪,🌰,🥜,🍯,🥛,🍼,🫖,☕️,🍵,🧃,🥤,🧋,🍶,🍺,🍻,🥂,🍷,🥃,🍸,🍹,🧉,🍾,🧊,🥄,🍴,🍽️,🥣,🥡,🥢,🧂,⚽️,🏀,🏈,⚾️,🥎,🎾,🏐,🏉,🥏,🎱,🪀,🏓,🏸,🏒,🏑,🥍,🏏,🪃,🥅,⛳️,🪁,🏹,🎣,🤿,🥊,🥋,🎽,🛹,🛼,🛷,⛸️,🎿,⛷️,🏂,🪂,🏆,🥇,🥈,🥉,🏅,🎖️,🏵️,🎗️,🎫,🎟️,🎪,🎭,🩰,🎨,🎬,🎤,🎧,🎼,🎹,🥁,🎷,🎺,🎸,🪕,🎻,🎲,♟️,🎯,🎳,🎮,🎰,🧩,🚗,🚕,🚙,🚌,🚎,🏎️,🚓,🚑,🚒,🚐,🛻,🚚,🚛,🚜,🦯,🦽,🦼,🛴,🚲,🛵,🏍️,🛺,🚨,🚔,🚍,🚘,🚖,🚡,🚠,🚟,🚃,🚋,🚞,🚝,🚄,🚅,🚈,🚂,🚆,🚇,🚊,🚉,✈️,🛫,🛬,🛩️,💺,🛰️,🚀,🛸,🚁,🛶,⛵️,🚤,🛥️,🛳️,⛴️,🚢,⚓️,🪝,⛽️,🚧,🚦,🚥,🚏,🗺️,🗿,🗽,🗼,🏰,🏯,🏟️,🎡,🎢,🎠,⛲️,⛱️,🏖️,🏝️,🏜️,🌋,⛰️,🏔️,🗻,🏕️,⛺️,🛖,🏠,🏡,🏘️,🏚️,🏗️,🏭,🏢,🏬,🏣,🏤,🏥,🏦,🏨,🏪,🏫,🏩,💒,🏛️,⛪️,🕌,🕍,🛕,🕋,⛩️,🛤️,🛣️,🗾,🎑,🏞️,🌅,🌄,🌠,🎇,🎆,🌇,🌆,🏙️,🌃,🌌,🌉,🌁,⌚️,📱,📲,💻,⌨️,🖥️,🖨️,🖱️,🖲️,🕹️,💽,💾,💿,📀,📼,📷,📸,📹,🎥,📽️,🎞️,📞,☎️,📟,📠,📺,📻,🎙️,🎚️,🎛️,🧭,⏱️,⏲️,⏰,🕰️,⌛️,⏳,📡,🔋,🔌,💡,🔦,🕯️,🪔,🧯,🛢️,💸,💵,💴,💶,💷,🪙,💰,💳,💎,⚖️,🪜,🧰,🔧,🔨,⚒️,🛠️,⛏️,🪚,🔩,⚙️,🪤,🧱,⛓️,🧲,🔫,💣,🧨,🪓,🔪,🗡️,⚔️,🛡️,🚬,⚰️,🪦,⚱️,🏺,🔮,📿,🧿,💈,⚗️,🔭,🔬,🕳️,🩹,🩺,💊,💉,🩸,🧬,🦠,🧫,🧪,🌡️,🧹,🪠,🧺,🧻,🚽,🚰,🚿,🛁,🛀,🧼,🧽,🪒,🧴,🛎️,🔑,🗝️,🚪,🪑,🛋️,🛏️,🛌,🧸,🪆,🖼️,🪞,🪟,🛍️,🛒,🎁,🎈,🎏,🎀,🪄,🪅,🎊,🎉,🎎,🏮,🎐,🧧,✉️,📩,📨,📧,💌,📥,📤,📦,🏷️,📪,📫,📬,📭,📮,📯,📜,📃,📄,📑,🧾,📊,📈,📉,🗒️,🗓️,📆,📅,🗑️,📇,🗃️,🗳️,🗄️,📋,📁,📂,🗂️,🗞️,📰,📓,📔,📒,📕,📗,📘,📙,📚,📖,🔖,🧷,🔗,📎,🖇️,📐,📏,🧮,📌,📍,✂️,🖊️,🖋️,✒️,🖌️,🖍️,📝,✏️,🔍,🔎,🔏,🔐,🔒,🔓";
+            const safeEmojis = "😀,😃,😄,😁,😆,😅,😂,🤣,🥲,☺️,😊,😇,🙂,🙃,😉,😌,😍,🥰,😘,😗,😙,😚,😋,😛,😝,😜,🤪,🤨,🧐,🤓,😎,🥸,🤩,🥳,😏,😒,😞,😔,😟,😕,🙁,☹️,😣,😖,😫,😩,🥺,😢,😭,😤,😠,😡,🤬,🤯,😳,🥵,🥶,😱,😨,😰,😥,😓,🤗,🤔,🫣,🤭,🤫,🤥,😶,😐,😑,😬,🙄,😯,😦,😧,😮,😲, 🥱,😴,🤤,😪,😵,🤐,🥴,🤢,🤮,🤧,😷,🤒,🤕,🤑,🤠,😈,👿,👹,👺,🤡,💩,👻,💀,☠️,👽,👾,🤖,🎃,😺,😸,😹,😻,😼,😽,🙀,😿,😾,🙈,🙉,🙊,💋,💌,💘,💝,💖,💗,💓,💞,💕,💟,❣️,💔,❤️,🧡,💛,💚,💙,💜,🤎,🖤,🤍,💯,💢,💥,💫,💦,💨,💣,💬,💭,💤,👋,🤚,🖐️,✋,🖖,👌,🤌,🤏,✌️,🤞,🫰,🤟,🤘,🤙,👈,👉,👆,🖕,👇,☝️,👍,👎,✊,👊,🤛,🤜,👏,🙌,🫶,👐,🤲,🤝,🙏,✍️,💅,🤳,💪, 🦵,🦶,👂,👃,🧠,🫀,🫁,🦷,🦴,👀,👁️,👅,👄,🫦,👶,🧒,👦,👧,🧑,👱,👨,🧔,👩,🧓,👴,👵,🐶,🐱,🐭,🐹,🐰,🦊,🐻,🐼,🐻‍❄️, 🐨,🐯,🦁,🐮,🐷,🐽,🐸,🐵,🐒,🐔,🐧,🐦,🐤,🐣,🐥,🦆,🦅,🦉,🦇,🐺,🐗,🐴,🦄,🐝,🪱,🐛,🦋,🐌,🐞,🐜,🪰,🪲,🪳,🦟,🦗,🕷️,🕸️,🦂,🐢,🐍,🦎,🦖,🦕,🐙,🦑,🦐,🦞,🦀,🐡,🐠,🐟,🐬,🐳,🐋,🦈,🦭,🐊,🐅,🐆,🦓,🦍,🦧,🦣,🐘,🦛,🦏,🐪,🐫,🦒,🦘,🐃, 🐂,🐄,🐎,🐖,🐏,🐑,🦙,🐐,🦌,🐕,🐩,🦮,🐕‍🦺,🐈,🐈‍⬛,🪶, 🐓,🦃,🦤,🦚,🦜,🦢,🦩,🕊️,🐇,🦝,🦨,🦡,🦫,🦦,🦥,🐁,🐀,🐿️, 🦔,🐾,🐉,🐲,🌵,🎄,🌲,🌳,🌴,🪵,🌱,🌿,☘️,🍀,🎍,🪴,🎋,🍃,🍂,🍁,🍄,🐚,🪨,🌾,💐,🌷,🌹,🥀,🌺,🌸,🌼,🌻,🌞,🌝,🌛,🌜,🌚,🌕,🌖,🌗,🌘,🌑,🌒,🌓,🌔,🌙,🌎,🌍,🌏,🪐,💫,⭐️,🌟, ✨,⚡️,☄️,💥,🔥,🌪️,🌈,☀️,🌤️,⛅️,🌥️,☁️,🌦️,🌧️,⛈️,🌩️,🌨️,❄️,☃️,⛄️,🌬️,💨, 💧,💦,☔️,☂️,🌊,🌫️,🍏,🍎,🍐,🍊,🍋,🍌,🍉,🍇,🍓,🫐,🍈,🍒, 🍑,🥭,🍍,🥥,🥝,🍅,🍆,🥑,🥦,🥬,🥒,🌶️,🫑,🌽,🥕,🫒,🧄,🧅,🥔,🍠,🥐,🥯,🍞,🥖,🥨,🧀,🥚,🍳,🧈,🥞,🧇,🥓,🥩,🍗,🍖,🌭,🍔,🍟,🍕,🫓,🥪,🥙,🧆,🌮,🌯,🫔,🥗,🥘,🫕,🥫,🍝,🍜,🍲, 🍛,🍣,🍱,🥟,🦪,🍤,🍙,🍚,🍘,🍥,🥠,🥮,🍢,🍡,🍧,🍨,🍦,🥧,🧁,🍰,🎂,🍮,🍭,🍬,🍫,🍿,🍩,🍪,🌰,🥜,🍯,🥛,🍼,🫖,☕️, 🍵,🧃,🥤,🧋,🍶,🍺,🍻,🥂,🍷,🥃,🍸,🍹,🧉,🍾,🧊,🥄,🍴,🍽️,🥣,🥡,🥢,🧂,⚽️,🏀,🏈,⚾️,🥎,🎾,🏐,🏉,🥏,🎱,🪀,🏓,🏸,🏒,🏑,🥍,🏏,🪃,🥅,⛳️,🪁,🏹,🎣,🤿,🥊,🥋,🎽,🛹,🛼,🛷,⛸️,🎿,⛷️,🏂,🪂,🏆,🥇,🥈,🥉,🏅,🎖️,🏵️,🎗️,🎫,🎟️,🎪,🎭,🩰,🎨,🎬,🎤,🎧,🎼,🎹,🥁,🎷,🎺,🎸,🪕,🎻,🎲,♟️,🎯,🎳,🎮,🎰,🧩,🚗,🚕,🚙,🚌,🚎,🏎️,🚓,🚑,🚒,🚐,🛻,🚚,🚛,🚜,🦯,🦽,🦼,🛴,🚲,🛵,🏍️,🛺,🚨,🚔,🚍,🚘,🚖,🚡,🚠,🚟,🚃,🚋,🚞,🚝,🚄,🚅,🚈,🚂,🚆,🚇,🚊,🚉,✈️,🛫,🛬,🛩️,💺,🛰️,🚀,🛸,🚁,🛶,⛵️,🚤,🛥️,🛳️,⛴️,🚢,⚓️,🪝,⛽️,🚧,🚦,🚥,🚏,🗺️,🗿,🗽,🗼,🏰,🏯,🏟️,🎡,🎢,🎠,⛲️,⛱️,🏖️,🏝️,🏜️,🌋,⛰️,🏔️,🗻,🏕️,⛺️,🛖,🏠,🏡,🏘️,🏚️,🏗️,🏭,🏢,🏬,🏣,🏤,🏥,🏦,🏨,🏪,🏫,🏩,💒,🏛️,⛪️,🕌,🕍,🛕,🕋,⛩️,🛤️,🛣️,🗾,🎑,🏞️, 🌅,🌄,🌠,🎇,🎆,🌇,🌆,🏙️,🌃,🌌,🌉,🌁,⌚️,📱,📲,💻,⌨️,🖥️,🖨️,🖱️,🖲️,🕹️,💽,💾,💿,📀,📼,📷,📸,📹,🎥,📽️,🎞️,📞,☎️,📟,📠,📺,📻,🎙️,🎚️,🎛️,🧭,⏱️,⏲️,⏰,🕰️,⌛️,⏳,📡,🔋,🔌,💡,🔦,🕯️,🪔,🧯,🛢️,💸,💵,💴,💶,💷,🪙,💰,💳,💎,⚖️,🪜,🧰,🔧,🔨,⚒️,🛠️,⛏️,🪚,🔩,⚙️, 🪤,🧱,⛓️,🧲,🔫,💣,🧨,🪓,🔪,🗡️,⚔️,🛡️,🚬,⚰️,🪦,⚱️,🏺,🔮,📿,🧿,💈,⚗️,🔭,🔬,🕳️,🩹,🩺,💊,💉,🩸,🧬,🦠,🧫,🧪,🌡️,🧹,🪠,🧺, 🧻,🚽,🚰,🚿,🛁,🛀,🧼,🧽,🪒,🧴,🛎️,🔑,🗝️,🚪,🪑,🛋️,🛏️,🛌,🧸,🪆,🖼️,🪞,🪟,🛍️,🛒,🎁,🎈,🎏,🎀,🪄,🪅,🎊,🎉,🎎,🏮,🎐,🧧,✉️,📩,📨,📧,💌,📥,📤,📦,🏷️,📪,📫,📬,📭,📮,📯,📜,📃,📄,📑,🧾,📊,📈,📉,🗒️,🗓️,📆,📅,🗑️,📇,🗃️,🗳️,🗄️,📋,📁,📂,🗂️,🗞️,📰,📓,📔,📒,📕,📗,📘,📙,📚,📖,🔖,🧷,🔗,📎,🖇️,📐,📏,🧮,📌,📍,✂️,🖊️,🖋️,✒️,🖌️,🖍️,📝,✏️,🔍,🔎,🔏,🔐,🔒,🔓";
             const stickerMenu = document.getElementById('stickerMenu');
             safeEmojis.split(',').forEach(emoji => { if(emoji.trim()) { const div = document.createElement('div'); div.className = 'sticker-emoji'; div.innerText = emoji; div.onclick = () => sendSticker(emoji); stickerMenu.appendChild(div); } });
-            
+
             document.getElementById('password').addEventListener('keypress', function(e) {
                 if (e.key === 'Enter') { e.preventDefault(); login(); }
             });
-            
+
             fetch('/getLoginBg?t=' + Date.now()).then(res => res.json()).then(bg => {
                 const container = document.getElementById('loginBgContainer');
                 if (bg && bg.type === 'video') { container.innerHTML = `<video src="${bg.data}" autoplay loop muted playsinline></video>`; }
                 else if (bg && bg.type === 'image') { container.innerHTML = `<img src="${bg.data}">`; }
             }).catch(err => {});
+
+            // 🧠 NEW: SCROLL EVENT LISTENER FOR LAZY LOADING
+            document.getElementById('messages').addEventListener('scroll', function() {
+                if (this.scrollTop === 0 && visibleCount < savedHistory.length) {
+                    // Scroll kora obosthay ekebare opore pouchale aro 50 ta load hobe
+                    visibleCount += 50;
+                    renderSlice(false); // false mane page laphiye niche jabe na
+                }
+            });
         });
 
         function closeAllMenus() {
@@ -272,21 +282,22 @@
         }
 
         socket.on('triggerSync', () => { syncData(); });
-        
+
         function syncData() {
             if(!currentUser) return;
-            socket.emit('requestHistory'); 
+            socket.emit('requestHistory');
         }
 
         socket.on('history', (history) => {
             savedHistory = history || [];
-            render();
+            visibleCount = 50; // Jakhoni notun kore load hobe, 50 ta dekhabe
+            renderSlice(true);
         });
 
         socket.on('disconnect', () => { if(currentUser) updateStatus(); });
-        
-        socket.on('connect', () => { 
-            if (currentUser) { socket.emit('setOnline', currentUser); socket.emit('markAsRead', currentUser); syncData(); } 
+
+        socket.on('connect', () => {
+            if (currentUser) { socket.emit('setOnline', currentUser); socket.emit('markAsRead', currentUser); syncData(); }
         });
 
         document.addEventListener('visibilitychange', () => {
@@ -331,30 +342,30 @@
             }
         }
 
-        async function uploadWallpaper(input) { 
+        async function uploadWallpaper(input) {
             closeAllMenus();
-            if (input.files && input.files[0]) { 
+            if (input.files && input.files[0]) {
                 showToast("Uploading Wallpaper... ⏳");
                 const file = input.files[0];
                 const fileUrl = await uploadMedia(file, 'bg', file.name || 'bg.jpg');
                 if(fileUrl) {
                     let myDp = null;
                     if (globalProfiles && globalProfiles[currentUser] && globalProfiles[currentUser].dp) {
-                        try { let parsed = JSON.parse(globalProfiles[currentUser].dp); myDp = parsed.dp; } 
+                        try { let parsed = JSON.parse(globalProfiles[currentUser].dp); myDp = parsed.dp; }
                         catch(err) { myDp = globalProfiles[currentUser].dp; }
                     }
                     let myData = { dp: myDp, bg: { url: fileUrl, ts: Date.now() } };
                     socket.emit('updateDP', {role: currentUser, dpData: JSON.stringify(myData)});
                     showToast("Chat Wallpaper Updated! 🙂");
                 }
-            } 
+            }
         }
 
-        function removeWallpaper() { 
+        function removeWallpaper() {
             closeAllMenus();
             let myDp = null;
             if (globalProfiles && globalProfiles[currentUser] && globalProfiles[currentUser].dp) {
-                try { let parsed = JSON.parse(globalProfiles[currentUser].dp); myDp = parsed.dp; } 
+                try { let parsed = JSON.parse(globalProfiles[currentUser].dp); myDp = parsed.dp; }
                 catch(err) { myDp = globalProfiles[currentUser].dp; }
             }
             let myData = { dp: myDp, bg: { url: null, ts: Date.now() } };
@@ -385,22 +396,23 @@
                     currentUser = data.role;
                     globalProfiles = data.profiles || null;
                     globalStatus = data.userStatus || null;
-                    savedHistory = data.chatHistory || []; 
-                    
+                    savedHistory = data.chatHistory || [];
+                    visibleCount = 50;
+
                     document.getElementById('loginBgContainer').style.display = 'none';
                     document.getElementById('loginBox').style.display = 'none';
                     document.getElementById('loginMagicHeart').style.display = 'none';
                     document.getElementById('chatBox').style.display = 'flex';
-                    
+
                     if(currentUser === 'Master') { document.getElementById('masterLoginBgOption').style.display = 'block'; }
                     if(!socket.connected) socket.connect();
                     socket.emit('setOnline', currentUser);
                     socket.emit('markAsRead', currentUser);
-                    
+
                     updateDPDisplay();
                     updateStatus();
-                    render(); 
-                    passField.value = ''; 
+                    renderSlice(true);
+                    passField.value = '';
                 }
             } catch (err) {}
         }
@@ -415,21 +427,22 @@
                     currentUser = data.role;
                     globalProfiles = data.profiles || null;
                     globalStatus = data.userStatus || null;
-                    savedHistory = data.chatHistory || []; 
-                    
+                    savedHistory = data.chatHistory || [];
+                    visibleCount = 50;
+
                     document.getElementById('loginBgContainer').style.display = 'none';
                     document.getElementById('loginBox').style.display = 'none';
                     document.getElementById('loginMagicHeart').style.display = 'none';
                     document.getElementById('chatBox').style.display = 'flex';
-                    
+
                     if(currentUser === 'Master') { document.getElementById('masterLoginBgOption').style.display = 'block'; }
                     if(!socket.connected) socket.connect();
                     socket.emit('setOnline', currentUser);
                     socket.emit('markAsRead', currentUser);
-                    
+
                     updateDPDisplay();
                     updateStatus();
-                    render(); 
+                    renderSlice(true);
                 } else { alert('Wrong Password!'); }
             } catch (err) { alert("Network error. Please try again."); }
         }
@@ -538,77 +551,77 @@
         }
 
         function openCallScreen(targetRole, statusMsg) { document.getElementById('callScreen').style.display = 'flex'; document.getElementById('callName').innerText = (globalProfiles && globalProfiles[targetRole] && globalProfiles[targetRole].name) ? globalProfiles[targetRole].name : targetRole; const dpImg = document.getElementById('callDP'); if(globalProfiles && globalProfiles[targetRole] && globalProfiles[targetRole].dp) dpImg.src = globalProfiles[targetRole].dp; else dpImg.src = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%23aaa'%3E%3Cpath d='M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z'/%3E%3C/svg%3E"; document.getElementById('callStatusText').innerText = statusMsg; document.getElementById('callTimer').style.display = 'none'; callSeconds = 0; clearInterval(callInterval); }
-        
+
         async function startCall() { if(!currentUser) return; const other = currentUser === 'Master' ? 'Guest' : 'Master'; if(!globalStatus || !globalStatus[other] || !globalStatus[other].online) return showToast("Partner is offline!"); openCallScreen(other, "Calling..."); try { callStream = await navigator.mediaDevices.getUserMedia({ audio: true }); peerConn = new RTCPeerConnection(rtcConfig); callStream.getTracks().forEach(t => peerConn.addTrack(t, callStream)); peerConn.ontrack = e => { document.getElementById('remoteAudio').srcObject = e.streams[0]; }; peerConn.onicecandidate = e => { if(e.candidate) socket.emit('webrtc_ice', { to: other, candidate: e.candidate }); }; const offer = await peerConn.createOffer(); await peerConn.setLocalDescription(offer); socket.emit('webrtc_offer', { to: other, from: currentUser, offer }); } catch(err) { cutCall(true); alert("Microphone permission denied! Cannot make call."); } }
-        
+
         socket.on('webrtc_offer', async (data) => { const callerName = (globalProfiles && globalProfiles[data.from] && globalProfiles[data.from].name) ? globalProfiles[data.from].name : data.from; if(confirm("📞 Incoming Audio Call from " + callerName + "!\nAccept?")) { openCallScreen(data.from, "Connecting..."); try { callStream = await navigator.mediaDevices.getUserMedia({ audio: true }); peerConn = new RTCPeerConnection(rtcConfig); callStream.getTracks().forEach(t => peerConn.addTrack(t, callStream)); peerConn.ontrack = e => { document.getElementById('remoteAudio').srcObject = e.streams[0]; }; peerConn.onicecandidate = e => { if(e.candidate) socket.emit('webrtc_ice', { to: data.from, candidate: e.candidate }); }; await peerConn.setRemoteDescription(data.offer); const answer = await peerConn.createAnswer(); await peerConn.setLocalDescription(answer); socket.emit('webrtc_answer', { to: data.from, answer }); startCallTimer(); } catch(err) { cutCall(true); alert("Microphone permission denied! Cannot accept call."); } } else { socket.emit('endCall', { to: data.from }); const now = new Date(); socket.emit('sendMessage', { id: Date.now().toString(), role: data.from, text: "📞 Missed Call", time: now.toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'}), date: now.toLocaleDateString('en-GB', {day:'numeric', month:'short', year:'numeric'}), status: 'sent', replyTo: null, replyToRole: null, replyToText: null }); } });
         socket.on('webrtc_answer', async (data) => { await peerConn.setRemoteDescription(data.answer); startCallTimer(); });
         socket.on('webrtc_ice', async (data) => { if(peerConn) await peerConn.addIceCandidate(data.candidate); });
         socket.on('callEnded', () => { cutCall(false); });
-        
+
         function startCallTimer() { document.getElementById('callStatusText').innerText = "Connected"; const timerEl = document.getElementById('callTimer'); timerEl.style.display = 'block'; callInterval = setInterval(() => { callSeconds++; timerEl.innerText = String(Math.floor(callSeconds / 60)).padStart(2, '0') + ":" + String(callSeconds % 60).padStart(2, '0'); }, 1000); }
         function cutCall(isInitiator = false) { let finalTime = document.getElementById('callTimer').innerText; let wasConnected = callSeconds > 0; if(peerConn) { peerConn.close(); peerConn = null; } if(callStream) { callStream.getTracks().forEach(t => t.stop()); callStream = null; } document.getElementById('callScreen').style.display = 'none'; clearInterval(callInterval); const other = currentUser === 'Master' ? 'Guest' : 'Master'; if(isInitiator) { socket.emit('endCall', { to: other }); let logText = wasConnected ? "📞 Audio Call (" + finalTime + ")" : "📞 Missed Call"; const now = new Date(); socket.emit('sendMessage', { id: Date.now().toString(), role: currentUser, text: logText, time: now.toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'}), date: now.toLocaleDateString('en-GB', {day:'numeric', month:'short', year:'numeric'}), status: 'sent', replyTo: null, replyToRole: null, replyToText: null }); } }
         function toggleMuteCall() { if(callStream) { const audioTrack = callStream.getAudioTracks()[0]; audioTrack.enabled = !audioTrack.enabled; document.getElementById('muteBtn').style.background = audioTrack.enabled ? 'rgba(255,255,255,0.2)' : 'rgba(255,0,0,0.5)'; } }
-        
+
         function toggleMenu(e) { e.stopPropagation(); document.getElementById('kebabMenu').classList.toggle('show'); }
         function toggleAttachment(e) { if(e) e.stopPropagation(); document.getElementById('attachmentMenu').classList.toggle('show'); document.getElementById('stickerMenu').classList.remove('show'); }
         function toggleStickers(e) { if(e) e.stopPropagation(); document.getElementById('attachmentMenu').classList.remove('show'); document.getElementById('stickerMenu').classList.toggle('show'); }
-        
+
         document.addEventListener('click', function(event) { if (!event.target.matches('.icon-btn')) { document.getElementById('kebabMenu').classList.remove('show'); } const attachMenu = document.getElementById('attachmentMenu'); const stickerMenu = document.getElementById('stickerMenu'); const attachBtn = document.getElementById('attachBtn'); const stickerBtn = document.getElementById('stickerBtn'); if (attachMenu.classList.contains('show') && !attachMenu.contains(event.target) && event.target !== attachBtn) attachMenu.classList.remove('show'); if (stickerMenu.classList.contains('show') && !stickerMenu.contains(event.target) && (!stickerBtn || !stickerBtn.contains(event.target))) stickerMenu.classList.remove('show'); });
-        
+
         function sendSticker(emoji) { closeAllMenus(); const now = new Date(); const msg = { id: Date.now().toString(), role: currentUser, text: emoji, isSticker: true, time: now.toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'}), date: now.toLocaleDateString('en-GB', {day:'numeric', month:'short', year:'numeric'}), status: 'sent', replyTo: replyTo ? replyTo.id : null, replyToRole: replyTo ? replyTo.role : null, replyToText: replyTo ? getReplyTextPreview(replyTo) : null }; socket.emit('sendMessage', msg); cancelReply(); }
         function sendLocationMessage() { closeAllMenus(); if ("geolocation" in navigator) { navigator.geolocation.getCurrentPosition(function(position) { const msg = { id: Date.now().toString(), role: currentUser, text: '', location: { lat: position.coords.latitude, lng: position.coords.longitude }, time: new Date().toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'}), date: new Date().toLocaleDateString('en-GB', {day:'numeric', month:'short', year:'numeric'}), status: 'sent', replyTo: replyTo ? replyTo.id : null, replyToRole: replyTo ? replyTo.role : null, replyToText: replyTo ? getReplyTextPreview(replyTo) : null }; socket.emit('sendMessage', msg); cancelReply(); }, function() { alert("Location access denied!"); }); } else { alert("Geolocation not supported."); } }
-        
+
         function viewDP() { viewFullImage(document.getElementById('partnerDP').src); }
         function viewFullImage(src) { document.getElementById('fullSizeDP').src = src; document.getElementById('dpViewModal').style.display = 'flex'; document.querySelector('meta[name="viewport"]').setAttribute('content', 'width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes'); }
         function closeDPView() { document.getElementById('dpViewModal').style.display = 'none'; document.querySelector('meta[name="viewport"]').setAttribute('content', 'width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no'); }
-        
-        function changeName() { 
+
+        function changeName() {
             closeAllMenus();
-            const currentName = globalProfiles && globalProfiles[currentUser] ? globalProfiles[currentUser].name : currentUser; 
-            const newName = prompt("Enter your new Display Name:", currentName); 
-            if(newName && newName.trim() !== '') { 
-                socket.emit('updateName', {role: currentUser, name: newName.trim()}); 
+            const currentName = globalProfiles && globalProfiles[currentUser] ? globalProfiles[currentUser].name : currentUser;
+            const newName = prompt("Enter your new Display Name:", currentName);
+            if(newName && newName.trim() !== '') {
+                socket.emit('updateName', {role: currentUser, name: newName.trim()});
                 showToast("Name Updated! 🙂");
-            } 
+            }
         }
-        
-        function uploadDP(input) { 
+
+        function uploadDP(input) {
             closeAllMenus();
-            if (input.files && input.files[0]) { 
-                const reader = new FileReader(); 
+            if (input.files && input.files[0]) {
+                const reader = new FileReader();
                 showToast("Uploading DP... ⏳");
-                reader.onload = (e) => { 
+                reader.onload = (e) => {
                     let currentBg = null;
                     if (globalProfiles && globalProfiles[currentUser] && globalProfiles[currentUser].dp) {
-                        try { let parsed = JSON.parse(globalProfiles[currentUser].dp); currentBg = parsed.bg; } 
+                        try { let parsed = JSON.parse(globalProfiles[currentUser].dp); currentBg = parsed.bg; }
                         catch(err) {}
                     }
                     let myData = { dp: e.target.result, bg: currentBg };
-                    socket.emit('updateDP', {role: currentUser, dpData: JSON.stringify(myData)}); 
-                    showToast("DP Updated! 🙂"); 
-                }; 
-                reader.readAsDataURL(input.files[0]); 
-            } 
+                    socket.emit('updateDP', {role: currentUser, dpData: JSON.stringify(myData)});
+                    showToast("DP Updated! 🙂");
+                };
+                reader.readAsDataURL(input.files[0]);
+            }
         }
-        
-        socket.on('profileUpdate', (p) => { globalProfiles = p; updateDPDisplay(); render(); });
-        
-        function updateDPDisplay() { 
-            if (!currentUser) return; 
-            const other = (currentUser === 'Master' ? 'Guest' : 'Master'); 
-            
-            if (globalProfiles && globalProfiles[other]) { 
+
+        socket.on('profileUpdate', (p) => { globalProfiles = p; updateDPDisplay(); renderSlice(false); });
+
+        function updateDPDisplay() {
+            if (!currentUser) return;
+            const other = (currentUser === 'Master' ? 'Guest' : 'Master');
+
+            if (globalProfiles && globalProfiles[other]) {
                 let dpSrc = globalProfiles[other].dp;
                 let dpUrl = dpSrc;
                 if (dpSrc) {
                     try { let parsed = JSON.parse(dpSrc); dpUrl = parsed.dp; } catch(e) { dpUrl = dpSrc; }
                 }
-                if(dpUrl) { document.getElementById('partnerDP').src = dpUrl; } 
-                else { document.getElementById('partnerDP').src = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%23aaa'%3E%3Cpath d='M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z'/%3E%3C/svg%3E"; } 
-                document.getElementById('userRoleTitle').innerText = globalProfiles[other].name ? globalProfiles[other].name : other; 
+                if(dpUrl) { document.getElementById('partnerDP').src = dpUrl; }
+                else { document.getElementById('partnerDP').src = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%23aaa'%3E%3Cpath d='M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z'/%3E%3C/svg%3E"; }
+                document.getElementById('userRoleTitle').innerText = globalProfiles[other].name ? globalProfiles[other].name : other;
             }
-            
+
             let mBg = null, gBg = null;
             if (globalProfiles && globalProfiles['Master'] && globalProfiles['Master'].dp) {
                 try { let parsed = JSON.parse(globalProfiles['Master'].dp); if(parsed.bg) mBg = parsed.bg; } catch(e){}
@@ -616,7 +629,7 @@
             if (globalProfiles && globalProfiles['Guest'] && globalProfiles['Guest'].dp) {
                 try { let parsed = JSON.parse(globalProfiles['Guest'].dp); if(parsed.bg) gBg = parsed.bg; } catch(e){}
             }
-            
+
             let finalBgUrl = null;
             if (mBg && mBg.ts && gBg && gBg.ts) {
                 finalBgUrl = (mBg.ts > gBg.ts) ? mBg.url : gBg.url;
@@ -628,35 +641,35 @@
                 if (mBg && typeof mBg === 'string') finalBgUrl = mBg;
                 else if (gBg && typeof gBg === 'string') finalBgUrl = gBg;
             }
-            
+
             const messagesDiv = document.getElementById('messages');
-            if (finalBgUrl) { 
-                messagesDiv.style.backgroundImage = `url('${finalBgUrl}')`; 
-            } else { 
-                messagesDiv.style.backgroundImage = 'none'; 
+            if (finalBgUrl) {
+                messagesDiv.style.backgroundImage = `url('${finalBgUrl}')`;
+            } else {
+                messagesDiv.style.backgroundImage = 'none';
             }
         }
-        
+
         socket.on('statusUpdate', (s) => { globalStatus = s; updateStatus(); });
-        
+
         function updateStatus() {
             if (!currentUser) return;
             const other = (currentUser === 'Master' ? 'Guest' : 'Master');
             const statusDiv = document.getElementById('statusText');
-            
+
             if (globalStatus && globalStatus[other].online) {
                 statusDiv.innerText = 'Online';
             } else if (globalStatus && globalStatus[other].lastSeen) {
                 const lastDate = new Date(globalStatus[other].lastSeen);
                 const now = new Date();
-                
+
                 const isSameDay = (d1, d2) => d1.getDate() === d2.getDate() && d1.getMonth() === d2.getMonth() && d1.getFullYear() === d2.getFullYear();
-                
+
                 const yesterday = new Date();
                 yesterday.setDate(now.getDate() - 1);
-                
+
                 const timeStr = lastDate.toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'});
-                
+
                 if (isSameDay(lastDate, now)) {
                     statusDiv.innerText = 'last seen today at ' + timeStr;
                 } else if (isSameDay(lastDate, yesterday)) {
@@ -669,17 +682,41 @@
                 statusDiv.innerText = 'Offline';
             }
         }
-        
-        socket.on('receiveMessage', (m) => { savedHistory.push(m); render(); if(m.role !== currentUser && document.visibilityState === 'visible') socket.emit('markAsRead', currentUser); });
-        
+
+        socket.on('receiveMessage', (m) => { 
+            savedHistory.push(m); 
+            
+            // Jabe scroll kora thakle autoscroll hobe, na hole hobe na
+            const box = document.getElementById('messages');
+            const isAtBottom = box.scrollHeight - box.scrollTop <= box.clientHeight + 100;
+            
+            if(visibleCount < savedHistory.length) visibleCount++; // Notun message asle limit bariye nebe
+            
+            renderSlice(isAtBottom); 
+            
+            if(m.role !== currentUser && document.visibilityState === 'visible') socket.emit('markAsRead', currentUser); 
+        });
+
         function formatLinks(text) { if(!text) return ''; const regex = /((?:https?:\/\/|www\.)[^\s]+|\b[a-zA-Z0-9-]+\.[a-zA-Z]{2,}\b(?:\/[^\s]*)?)/gi; let formattedText = text.replace(regex, function(url) { let href = url; if (!href.match(/^https?:\/\//i)) href = 'http://' + href; return `<a href="${href}" target="_blank" style="color: #027eb5; text-decoration: underline;" onclick="event.stopPropagation()">${url}</a>`; }); return formattedText.replace(/\n/g, '<br>'); }
         function getReplyTextPreview(m) { if (m.isSticker) return '🏵️ Sticker'; if (m.image) return '📷 Photo'; if (m.location) return '📍 Location'; if (m.audio) return '🎤 Audio'; if (m.fileName) return '📄 Document'; return m.text; }
-        
-        function render() {
+
+        // 🧠 THE LAZY LOADING BRAIN (Replaces old render function)
+        function renderSlice(scrollToBottom = false) {
             if (!currentUser) return;
             const box = document.getElementById('messages');
-            box.innerHTML = ''; let lastDisplayedDate = '';
-            savedHistory.forEach(m => {
+            
+            // Puran scroll position ta mone rakha hoche jate page na lafay
+            const oldScrollHeight = box.scrollHeight;
+            const oldScrollTop = box.scrollTop;
+
+            box.innerHTML = ''; 
+            let lastDisplayedDate = '';
+
+            // Sudhu limit moto message dekhabe (Default 50)
+            const sliceStartIndex = Math.max(0, savedHistory.length - visibleCount);
+            const currentSlice = savedHistory.slice(sliceStartIndex);
+
+            currentSlice.forEach(m => {
                 if (m.deletedFor && m.deletedFor.includes(currentUser)) return;
                 if (m.date && m.date !== lastDisplayedDate) { const d = document.createElement('div'); d.className = 'date-divider'; const today = new Date().toLocaleDateString('en-GB', {day:'numeric', month:'short', year:'numeric'}); d.innerHTML = `<span>${m.date === today ? 'Today' : m.date}</span>`; box.appendChild(d); lastDisplayedDate = m.date; }
                 const div = document.createElement('div'); div.id = 'msg-' + m.id; div.className = 'msg ' + (m.role === currentUser ? 'my-msg' : 'other-msg'); if (m.isDeleted) div.classList.add('deleted-msg');
@@ -692,57 +729,5 @@
                     div.style.background = 'transparent'; div.style.boxShadow = 'none'; div.style.padding = '0';
                     content += `<span class="role-tag" style="background: white; padding: 2px 5px; border-radius: 5px; display:inline-block;">${senderName}</span>`;
                     content += `<div style="font-size: 80px; line-height: 1; margin: 5px 0; filter: drop-shadow(2px 4px 6px rgba(0,0,0,0.2));">${m.text}</div>`;
-                    content += `<div class="time-tag" style="background: rgba(255,255,255,0.7); padding: 2px 5px; border-radius: 10px;">${m.time ? m.time : ''} ${tickHTML}</div>`;
-                } else {
-                    let imgHTML = ''; if (m.image && !m.isDeleted) imgHTML = `<img src="${m.image}" class="msg-image" onclick="viewFullImage('${m.image}')" draggable="false">`;
-                    let docHTML = ''; if (m.fileData && !m.isDeleted) docHTML = `<a href="${m.fileData}" download="${m.fileName}" class="doc-msg" onclick="event.stopPropagation()"><span class="doc-icon">📄</span><span class="doc-name">${m.fileName}</span><span class="doc-download">⬇️</span></a>`;
-                    let audioHTML = '';
-                    if (m.audio && !m.isDeleted) {
-                        audioHTML = `<div class="audio-name" style="color:#075e54; font-size:12px; font-weight:bold; margin-bottom:5px;">🎵 ${m.fileName || 'Audio'}</div>
-                                                                        <audio controls controlsList="nodownload noplaybackrate" src="${m.audio}" class="msg-audio" onclick="event.stopPropagation()"></audio>`;
-                    }
-                    let locHTML = ''; if (m.location && !m.isDeleted) locHTML = `<a href="https://www.google.com/maps?q=${m.location.lat},${m.location.lng}" target="_blank" class="loc-msg" onclick="event.stopPropagation()"><span class="loc-icon">📍</span><span class="loc-text">View Location Map</span></a>`;
-                    content += `<span class="role-tag">${senderName}</span>${imgHTML}${docHTML}${audioHTML}${locHTML}<span style="white-space: pre-wrap;">${m.isDeleted ? m.text : formatLinks(m.text)}</span><div class="time-tag">${m.time ? m.time : ''} ${tickHTML}</div>`;
-                }
-                div.innerHTML = content; box.appendChild(div);
-            });
-            box.scrollTop = box.scrollHeight;
-        }
-        
-        function scrollToMsg(id) { const el = document.getElementById('msg-' + id); if (el) { el.scrollIntoView({ behavior: 'smooth', block: 'center' }); el.classList.add('highlight-msg'); setTimeout(() => el.classList.remove('highlight-msg'), 2000); } }
-        function openModal(m) { selectedMsg = m; document.getElementById('msgModal').style.display = 'flex'; if (m.isDeleted) { document.getElementById('btnReply').style.display = 'none'; document.getElementById('btnCopy').style.display = 'none'; document.getElementById('btnEveryone').style.display = 'none'; } else { document.getElementById('btnReply').style.display = 'block'; document.getElementById('btnEveryone').style.display = (m.role === currentUser ? 'block' : 'none'); if(m.text && m.text.trim() !== '' && !m.isSticker) { document.getElementById('btnCopy').style.display = 'block'; } else { document.getElementById('btnCopy').style.display = 'none'; } } }
-        function closeModal() { document.getElementById('msgModal').style.display = 'none'; }
-        function copyMessage() { if (selectedMsg && selectedMsg.text) { if(navigator.clipboard && window.isSecureContext) { navigator.clipboard.writeText(selectedMsg.text).then(() => { showToast("Message copied! 📋"); closeModal(); }); } else { const textArea = document.createElement("textarea"); textArea.value = selectedMsg.text; textArea.style.position = "fixed"; document.body.appendChild(textArea); textArea.focus(); textArea.select(); try { document.execCommand('copy'); showToast("Message copied! 📋"); } catch (err) {} textArea.remove(); closeModal(); } } }
-        function prepareReply() { replyTo = selectedMsg; document.getElementById('replyPreview').style.display = 'block'; document.getElementById('replyUser').innerText = 'Replying to ' + ((globalProfiles && globalProfiles[replyTo.role] && globalProfiles[replyTo.role].name) ? globalProfiles[replyTo.role].name : replyTo.role); document.getElementById('replyText').innerText = getReplyTextPreview(replyTo); closeModal(); document.getElementById('msgInput').focus(); }
-        function cancelReply() { replyTo = null; document.getElementById('replyPreview').style.display = 'none'; }
-        
-        function sendMessage() {
-            closeAllMenus();
-            if(isRecording) { stopAndSendRecording(); return; }
-            const msgInput = document.getElementById('msgInput'); const text = msgInput.value; if (!text.trim()) return;
-            socket.emit('sendMessage', { id: Date.now().toString(), role: currentUser, text: text, time: new Date().toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'}), date: new Date().toLocaleDateString('en-GB', {day:'numeric', month:'short', year:'numeric'}), status: 'sent', replyTo: replyTo ? replyTo.id : null, replyToRole: replyTo ? replyTo.role : null, replyToText: replyTo ? getReplyTextPreview(replyTo) : null });
-            msgInput.value = ''; msgInput.style.height = '44px'; cancelReply();
-        }
-        
-        function deleteMsg(type) {
-            socket.emit('deleteMessage', {id: selectedMsg.id, type, role: currentUser});
-            closeModal();
-            const msgEl = document.getElementById('msg-' + selectedMsg.id);
-            if (msgEl) {
-                if (type === 'me') { msgEl.style.display = 'none'; }
-                else if (type === 'everyone') {
-                    msgEl.innerHTML = `<span class="role-tag">${currentUser}</span><span style="white-space: pre-wrap; font-style: italic; color: #888;">🚫 This message was deleted</span><div class="time-tag"></div>`;
-                    msgEl.classList.add('deleted-msg'); msgEl.style.background = 'transparent'; msgEl.style.boxShadow = 'none';
-                }
-            }
-        }
-        
-        function clearChat() { closeAllMenus(); if(confirm("Clear chat for you?")) { socket.emit('clearChat', currentUser); document.getElementById('messages').innerHTML = ''; showToast("Chat Cleared! 🧹"); } }
-        
-        let typingTimer; const msgInputField = document.getElementById('msgInput'); msgInputField.addEventListener('input', function() { this.style.height = '44px'; this.style.height = (this.scrollHeight) + 'px'; socket.emit('typing', currentUser); clearTimeout(typingTimer); typingTimer = setTimeout(() => socket.emit('stopTyping', currentUser), 1500); });
-        socket.on('userTyping', (r) => { if(r !== currentUser) document.getElementById('statusText').innerText = 'typing...'; });
-        socket.on('userStoppedTyping', (r) => { if(r !== currentUser) updateStatus(); });
-    </script>
-</body>
-</html>
+                    content += `<div class="time-tag" style="background:
 
